@@ -11,7 +11,7 @@ public class SetVRCMobileShader : EditorWindow
         Shader targetShader = Shader.Find("VRChat/Mobile/Standard Lite");
         if (targetShader == null)
         {
-            Debug.LogError("Shader 'VRChat/Mobile/Standard Lite' not found! Make sure the VRChat SDK is imported.");
+            Debug.LogError("Shader 'VRChat/Mobile/Standard Lite' not found. Make sure the VRChat SDK is imported.");
             return;
         }
 
@@ -42,6 +42,6 @@ public class SetVRCMobileShader : EditorWindow
         }
 
         AssetDatabase.SaveAssets();
-        Debug.Log($"Done! Changed {changedCount} materials, skipped {skippedCount}.");
+        Debug.Log($"Done. Changed {changedCount} materials, skipped {skippedCount}.");
     }
 }
