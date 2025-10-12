@@ -4,7 +4,7 @@ using System.IO;
 
 public class SetVRCMobileShader : EditorWindow
 {
-    [MenuItem("Tools/Set All Materials to VRChat/Mobile/Standard Lite")]
+    [MenuItem("Tools/Set All Materials to VRChat-Mobile-Standard Lite")]
     public static void SetAllMaterialsShader()
     {
         string[] materialPaths = Directory.GetFiles("Assets", "*.mat", SearchOption.AllDirectories);
