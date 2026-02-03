@@ -21,11 +21,6 @@ public class ProceduralRoomTest : MonoBehaviour
     [Header("Internal Structures")]
     public int minInternalStructures = 1;
     public int maxInternalStructures = 4;
-    public Color internalStructureColor = new Color(0.7f, 0.4f, 0.9f);
-    
-    [Header("Internal Structures")]
-    public int minInternalStructures = 1;
-    public int maxInternalStructures = 4;
     
     [Space(5)]
     [Tooltip("Altura mínima de las estructuras internas")]
@@ -43,10 +38,6 @@ public class ProceduralRoomTest : MonoBehaviour
     
     [Space(5)]
     public Color internalStructureColor = new Color(0.7f, 0.4f, 0.9f);
-    
-    
-    public Color internalStructureColor = new Color(0.7f, 0.4f, 0.9f);
-
 
     void Start()
     {
@@ -143,39 +134,38 @@ public class ProceduralRoomTest : MonoBehaviour
         wall.GetComponent<Renderer>().material.color = color;
     }
 
-void GenerateInternalStructures(float roomSize, float wallHeight)
-{
-    int count = Random.Range(minInternalStructures, maxInternalStructures + 1);
-
-    for (int i = 0; i < count; i++)
+    void GenerateInternalStructures(float roomSize, float wallHeight)
     {
-        GameObject structure = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        structure.transform.parent = transform;
+        int count = Random.Range(minInternalStructures, maxInternalStructures + 1);
 
-        float width  = Random.Range(minInternalSize, maxInternalSize);
-        float depth  = Random.Range(minInternalSize, maxInternalSize);
-        float height = Random.Range(minInternalHeight, maxInternalHeight);
+        for (int i = 0; i < count; i++)
+        {
+            GameObject structure = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            structure.transform.parent = transform;
 
-        // seguridad: que no atraviesen paredes
-        float x = Random.Range(
-            -roomSize / 2f + width / 2f + 0.5f,
-             roomSize / 2f - width / 2f - 0.5f
-        );
+            float width  = Random.Range(minInternalSize, maxInternalSize);
+            float depth  = Random.Range(minInternalSize, maxInternalSize);
+            float height = Random.Range(minInternalHeight, maxInternalHeight);
 
-        float z = Random.Range(
-            -roomSize / 2f + depth / 2f + 0.5f,
-             roomSize / 2f - depth / 2f - 0.5f
-        );
+            // seguridad: que no atraviesen paredes
+            float x = Random.Range(
+                -roomSize / 2f + width / 2f + 0.5f,
+                 roomSize / 2f - width / 2f - 0.5f
+            );
 
-        structure.transform.position = new Vector3(x, height / 2f, z);
-        structure.transform.localScale = new Vector3(width, height, depth);
+            float z = Random.Range(
+                -roomSize / 2f + depth / 2f + 0.5f,
+                 roomSize / 2f - depth / 2f - 0.5f
+            );
 
-        Renderer r = structure.GetComponent<Renderer>();
-        r.material = new Material(Shader.Find("Standard"));
-        r.material.color = internalStructureColor;
+            structure.transform.position = new Vector3(x, height / 2f, z);
+            structure.transform.localScale = new Vector3(width, height, depth);
+
+            Renderer r = structure.GetComponent<Renderer>();
+            r.material = new Material(Shader.Find("Standard"));
+            r.material.color = internalStructureColor;
+        }
     }
-}
-
 
     void SpawnRandomObjects(float roomSize)
     {
@@ -208,12 +198,12 @@ void GenerateInternalStructures(float roomSize, float wallHeight)
             obj.transform.localScale *= Random.Range(0.4f, 1.2f);
 
             // ===== ADD PHYSICS =====
-            Rigidbody rb = obj.AddComponent<Rigidbody>(); // Rigidbody añadido aquí
+            Rigidbody rb = obj.AddComponent<Rigidbody>();
             rb.mass = Random.Range(0.5f, 3f);
             rb.interpolation = RigidbodyInterpolation.Interpolate;
 
             // ===== ADD VR INTERACTION =====
-            //obj.AddComponent<BasisPickupInteractable>(); // Pickup VR añadido aquí
+            //obj.AddComponent<BasisPickupInteractable>();
         }
     }
 
