@@ -37,6 +37,10 @@ public class ProceduralRoomTest : MonoBehaviour
     public float maxInternalSize = 4.0f;
     
     [Space(5)]
+    [Tooltip("Usar colores aleatorios para las estructuras internas")]
+    public bool useRandomColors = true;
+    
+    [Tooltip("Color base si no se usan colores aleatorios")]
     public Color internalStructureColor = new Color(0.7f, 0.4f, 0.9f);
 
     void Start()
@@ -163,8 +167,29 @@ public class ProceduralRoomTest : MonoBehaviour
 
             Renderer r = structure.GetComponent<Renderer>();
             r.material = new Material(Shader.Find("Standard"));
-            r.material.color = internalStructureColor;
+            
+            // ===== ASIGNAR COLOR ALEATORIO O FIJO =====
+            if (useRandomColors)
+            {
+                // Generar color aleatorio vibrante
+                r.material.color = GetRandomColor();
+            }
+            else
+            {
+                // Usar el color definido en el Inspector
+                r.material.color = internalStructureColor;
+            }
         }
+    }
+
+    // Método para generar colores aleatorios vibrantes
+    Color GetRandomColor()
+    {
+        // Opción 1: Colores completamente aleatorios
+        // return new Color(Random.Range(0f, 1f), Random.Range(0f, 1f), Random.Range(0f, 1f));
+        
+        // Opción 2: Colores más vibrantes y saturados (recomendado)
+        return Random.ColorHSV(0f, 1f, 0.6f, 1f, 0.7f, 1f);
     }
 
     void SpawnRandomObjects(float roomSize)
