@@ -138,49 +138,52 @@ public class ProceduralRoomTest : MonoBehaviour
         wall.GetComponent<Renderer>().material.color = color;
     }
 
-    void GenerateInternalStructures(float roomSize, float wallHeight)
+void GenerateInternalStructures(float roomSize, float wallHeight)
+{
+    int count = Random.Range(minInternalStructures, maxInternalStructures + 1);
+
+    for (int i = 0; i < count; i++)
     {
-        int count = Random.Range(minInternalStructures, maxInternalStructures + 1);
+        GameObject structure = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        structure.transform.parent = transform;
 
-        for (int i = 0; i < count; i++)
+        float width  = Random.Range(minInternalSize, maxInternalSize);
+        float depth  = Random.Range(minInternalSize, maxInternalSize);
+        float height = Random.Range(minInternalHeight, maxInternalHeight);
+
+        // seguridad: que no atraviesen paredes
+        float x = Random.Range(
+            -roomSize / 2f + width / 2f + 0.5f,
+             roomSize / 2f - width / 2f - 0.5f
+        );
+
+        float z = Random.Range(
+            -roomSize / 2f + depth / 2f + 0.5f,
+             roomSize / 2f - depth / 2f - 0.5f
+        );
+
+        structure.transform.position = new Vector3(x, height / 2f, z);
+        structure.transform.localScale = new Vector3(width, height, depth);
+
+        Renderer r = structure.GetComponent<Renderer>();
+        
+        // ===== SOLUCIÓN: Usar el material del objeto primitivo ya existente =====
+        // En lugar de crear un nuevo material, usar el que viene con el primitivo
+        // y solo cambiar su color
+        
+        // ===== ASIGNAR COLOR ALEATORIO O FIJO =====
+        if (useRandomColors)
         {
-            GameObject structure = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            structure.transform.parent = transform;
-
-            float width  = Random.Range(minInternalSize, maxInternalSize);
-            float depth  = Random.Range(minInternalSize, maxInternalSize);
-            float height = Random.Range(minInternalHeight, maxInternalHeight);
-
-            // seguridad: que no atraviesen paredes
-            float x = Random.Range(
-                -roomSize / 2f + width / 2f + 0.5f,
-                 roomSize / 2f - width / 2f - 0.5f
-            );
-
-            float z = Random.Range(
-                -roomSize / 2f + depth / 2f + 0.5f,
-                 roomSize / 2f - depth / 2f - 0.5f
-            );
-
-            structure.transform.position = new Vector3(x, height / 2f, z);
-            structure.transform.localScale = new Vector3(width, height, depth);
-
-            Renderer r = structure.GetComponent<Renderer>();
-            r.material = new Material(Shader.Find("Standard"));
-            
-            // ===== ASIGNAR COLOR ALEATORIO O FIJO =====
-            if (useRandomColors)
-            {
-                // Generar color aleatorio vibrante
-                r.material.color = GetRandomColor();
-            }
-            else
-            {
-                // Usar el color definido en el Inspector
-                r.material.color = internalStructureColor;
-            }
+            // Generar color aleatorio vibrante
+            r.material.color = GetRandomColor();
+        }
+        else
+        {
+            // Usar el color definido en el Inspector
+            r.material.color = internalStructureColor;
         }
     }
+}
 
     // Método para generar colores aleatorios vibrantes
     Color GetRandomColor()
