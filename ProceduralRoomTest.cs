@@ -13,6 +13,11 @@ public class ProceduralRoomTest : MonoBehaviour
     public float minWallHeight = 2.5f;
     public float maxWallHeight = 5f;
 
+    [Header("Object Spawning")]
+    public int minObjects = 3;
+    public int maxObjects = 8;
+    public GameObject[] spawnablePrefabs; // FBX / prefabs del proyecto
+
     void Start()
     {
         Random.InitState(seed);
@@ -54,7 +59,7 @@ public class ProceduralRoomTest : MonoBehaviour
             avgNoise
         );
 
-        // ===== FLOOR (CUBE, no Plane) =====
+        // ===== FLOOR =====
         GameObject floor = GameObject.CreatePrimitive(PrimitiveType.Cube);
         floor.name = "Floor";
         floor.transform.parent = transform;
@@ -62,36 +67,24 @@ public class ProceduralRoomTest : MonoBehaviour
         floor.transform.localScale = new Vector3(roomSize, 0.1f, roomSize);
         floor.GetComponent<Renderer>().material.color = baseColor;
 
-        // ===== WALLS (CUBES) =====
+        // ===== WALLS =====
         float wallThickness = 0.2f;
 
-        // North
-        CreateWall(
-            new Vector3(0, wallHeight / 2f, roomSize / 2f),
-            new Vector3(roomSize, wallHeight, wallThickness),
-            baseColor
-        );
+        CreateWall(new Vector3(0, wallHeight / 2f, roomSize / 2f),
+                   new Vector3(roomSize, wallHeight, wallThickness),
+                   baseColor);
 
-        // South
-        CreateWall(
-            new Vector3(0, wallHeight / 2f, -roomSize / 2f),
-            new Vector3(roomSize, wallHeight, wallThickness),
-            baseColor
-        );
+        CreateWall(new Vector3(0, wallHeight / 2f, -roomSize / 2f),
+                   new Vector3(roomSize, wallHeight, wallThickness),
+                   baseColor);
 
-        // East
-        CreateWall(
-            new Vector3(roomSize / 2f, wallHeight / 2f, 0),
-            new Vector3(wallThickness, wallHeight, roomSize),
-            baseColor
-        );
+        CreateWall(new Vector3(roomSize / 2f, wallHeight / 2f, 0),
+                   new Vector3(wallThickness, wallHeight, roomSize),
+                   baseColor);
 
-        // West
-        CreateWall(
-            new Vector3(-roomSize / 2f, wallHeight / 2f, 0),
-            new Vector3(wallThickness, wallHeight, roomSize),
-            baseColor
-        );
+        CreateWall(new Vector3(-roomSize / 2f, wallHeight / 2f, 0),
+                   new Vector3(wallThickness, wallHeight, roomSize),
+                   baseColor);
 
         // ===== LIGHT =====
         GameObject lightObj = new GameObject("RoomLight");
@@ -103,6 +96,9 @@ public class ProceduralRoomTest : MonoBehaviour
         light.intensity = Mathf.Lerp(0.6f, 1.1f, avgNoise);
         light.range = roomSize * 1.5f;
         light.color = new Color(1f, 0.95f, 0.85f);
+
+        // ===== SPAWN RANDOM OBJECTS =====
+        SpawnRandomObjects(roomSize);
     }
 
     void CreateWall(Vector3 position, Vector3 scale, Color color)
@@ -112,6 +108,55 @@ public class ProceduralRoomTest : MonoBehaviour
         wall.transform.position = position;
         wall.transform.localScale = scale;
         wall.GetComponent<Renderer>().material.color = color;
+    }
+
+    void SpawnRandomObjects(float roomSize)
+    {
+        int objectCount = Random.Range(minObjects, maxObjects + 1);
+
+        for (int i = 0; i < objectCount; i++)
+        {
+            GameObject obj;
+
+            // ===== DECIDE WHAT TO SPAWN =====
+            if (spawnablePrefabs != null && spawnablePrefabs.Length > 0 && Random.value > 0.4f)
+            {
+                // Spawn prefab / FBX
+                obj = Instantiate(
+                    spawnablePrefabs[Random.Range(0, spawnablePrefabs.Length)]
+                );
+            }
+            else
+            {
+                // Spawn primitive
+                PrimitiveType type = Random.value > 0.5f ? PrimitiveType.Cube : PrimitiveType.Sphere;
+                obj = GameObject.CreatePrimitive(type);
+            }
+
+            obj.transform.parent = transform;
+
+            // ===== RANDOM POSITION INSIDE ROOM =====
+            float margin = 1f;
+            float x = Random.Range(-roomSize / 2f + margin, roomSize / 2f - margin);
+            float z = Random.Range(-roomSize / 2f + margin, roomSize / 2f - margin);
+
+            obj.transform.position = new Vector3(x, 0.6f, z);
+            obj.transform.rotation = Random.rotation;
+            obj.transform.localScale *= Random.Range(0.4f, 1.2f);
+
+            // ===== ADD PHYSICS =====
+            Rigidbody rb = obj.AddComponent<Rigidbody>(); // <-- Rigidbody añadido aquí
+            rb.mass = Random.Range(0.5f, 3f);
+            rb.interpolation = RigidbodyInterpolation.Interpolate;
+
+            // ===== ADD VR INTERACTION =====
+            obj.AddComponent<BasisPickupInteractable>(); 
+            // ↑ AQUÍ se añade el componente de pickup VR
+            // aquí podéis añadir más componentes en el futuro:
+            // - sonido
+            // - efectos
+            // - lógica especial
+        }
     }
 
     float GetAverageNoise(float[,] noise)
