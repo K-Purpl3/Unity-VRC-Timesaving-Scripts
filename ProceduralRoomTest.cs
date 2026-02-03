@@ -54,39 +54,63 @@ public class ProceduralRoomTest : MonoBehaviour
             avgNoise
         );
 
-        // FLOOR
-        GameObject floor = GameObject.CreatePrimitive(PrimitiveType.Plane);
+        // ===== FLOOR (CUBE, no Plane) =====
+        GameObject floor = GameObject.CreatePrimitive(PrimitiveType.Cube);
         floor.name = "Floor";
         floor.transform.parent = transform;
-        floor.transform.localScale = Vector3.one * (roomSize / 10f);
+        floor.transform.position = Vector3.zero;
+        floor.transform.localScale = new Vector3(roomSize, 0.1f, roomSize);
         floor.GetComponent<Renderer>().material.color = baseColor;
 
-        // WALLS
-        CreateWall(new Vector3(0, wallHeight / 2f, roomSize / 2f), Quaternion.identity, roomSize, wallHeight, baseColor);
-        CreateWall(new Vector3(0, wallHeight / 2f, -roomSize / 2f), Quaternion.identity, roomSize, wallHeight, baseColor);
-        CreateWall(new Vector3(roomSize / 2f, wallHeight / 2f, 0), Quaternion.Euler(0, 90, 0), roomSize, wallHeight, baseColor);
-        CreateWall(new Vector3(-roomSize / 2f, wallHeight / 2f, 0), Quaternion.Euler(0, 90, 0), roomSize, wallHeight, baseColor);
+        // ===== WALLS (CUBES) =====
+        float wallThickness = 0.2f;
 
-        // LIGHT
+        // North
+        CreateWall(
+            new Vector3(0, wallHeight / 2f, roomSize / 2f),
+            new Vector3(roomSize, wallHeight, wallThickness),
+            baseColor
+        );
+
+        // South
+        CreateWall(
+            new Vector3(0, wallHeight / 2f, -roomSize / 2f),
+            new Vector3(roomSize, wallHeight, wallThickness),
+            baseColor
+        );
+
+        // East
+        CreateWall(
+            new Vector3(roomSize / 2f, wallHeight / 2f, 0),
+            new Vector3(wallThickness, wallHeight, roomSize),
+            baseColor
+        );
+
+        // West
+        CreateWall(
+            new Vector3(-roomSize / 2f, wallHeight / 2f, 0),
+            new Vector3(wallThickness, wallHeight, roomSize),
+            baseColor
+        );
+
+        // ===== LIGHT =====
         GameObject lightObj = new GameObject("RoomLight");
         lightObj.transform.parent = transform;
         lightObj.transform.position = new Vector3(0, wallHeight - 0.5f, 0);
 
         Light light = lightObj.AddComponent<Light>();
         light.type = LightType.Point;
-        light.intensity = Mathf.Lerp(0.6f, 1.2f, avgNoise);
+        light.intensity = Mathf.Lerp(0.6f, 1.1f, avgNoise);
         light.range = roomSize * 1.5f;
         light.color = new Color(1f, 0.95f, 0.85f);
     }
 
-    void CreateWall(Vector3 position, Quaternion rotation, float roomSize, float height, Color color)
+    void CreateWall(Vector3 position, Vector3 scale, Color color)
     {
-        GameObject wall = GameObject.CreatePrimitive(PrimitiveType.Plane);
+        GameObject wall = GameObject.CreatePrimitive(PrimitiveType.Cube);
         wall.transform.parent = transform;
         wall.transform.position = position;
-        wall.transform.rotation = rotation;
-
-        wall.transform.localScale = new Vector3(roomSize / 10f, 1, height / 10f);
+        wall.transform.localScale = scale;
         wall.GetComponent<Renderer>().material.color = color;
     }
 
