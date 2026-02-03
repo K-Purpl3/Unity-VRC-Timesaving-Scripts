@@ -1,4 +1,7 @@
 using UnityEngine;
+#if UNITY_EDITOR
+using System.IO;
+#endif
 
 public class ProceduralRoomTest : MonoBehaviour
 {
@@ -6,6 +9,13 @@ public class ProceduralRoomTest : MonoBehaviour
     public int seed = 12345;
     public int noiseResolution = 64;
     public float noiseScale = 10f;
+    
+    [Space(5)]
+    [Tooltip("Guardar la imagen de ruido generada")]
+    public bool saveNoiseImage = true;
+    
+    [Tooltip("Nombre base para las imágenes guardadas")]
+    public string noiseImageBaseName = "noise_map";
 
     [Header("Room Settings")]
     public float minRoomSize = 6f;
@@ -42,19 +52,19 @@ public class ProceduralRoomTest : MonoBehaviour
     
     [Tooltip("Color base si no se usan colores aleatorios")]
     public Color internalStructureColor = new Color(0.7f, 0.4f, 0.9f);
-    
+
     void Start()
     {
-        if (useFixedSeed)
-        {
-            Random.InitState(seed); // Usar seed fijo para resultados reproducibles
-        }
-        else
-        {
-            Random.InitState(System.DateTime.Now.Millisecond); // Aleatorio cada vez
-        }
-    
+        Random.InitState(seed);
+
         float[,] noise = GenerateNoise();
+        
+        // Guardar la imagen de ruido
+        if (saveNoiseImage)
+        {
+            SaveNoiseAsImage(noise);
+        }
+        
         GenerateRoom(noise);
     }
 
@@ -76,6 +86,55 @@ public class ProceduralRoomTest : MonoBehaviour
         }
 
         return noiseMap;
+    }
+
+    void SaveNoiseAsImage(float[,] noiseMap)
+    {
+#if UNITY_EDITOR
+        // Crear textura a partir del mapa de ruido
+        Texture2D texture = new Texture2D(noiseResolution, noiseResolution);
+        
+        for (int x = 0; x < noiseResolution; x++)
+        {
+            for (int y = 0; y < noiseResolution; y++)
+            {
+                float value = noiseMap[x, y];
+                Color color = new Color(value, value, value); // Escala de grises
+                texture.SetPixel(x, y, color);
+            }
+        }
+        
+        texture.Apply();
+        
+        // Convertir a PNG
+        byte[] bytes = texture.EncodeToPNG();
+        
+        // Crear la carpeta si no existe
+        string folderPath = "Assets/Noise_Imagenes";
+        if (!Directory.Exists(folderPath))
+        {
+            Directory.CreateDirectory(folderPath);
+            Debug.Log("Carpeta 'Noise_Imagenes' creada en Assets");
+        }
+        
+        // Generar nombre único con timestamp
+        string timestamp = System.DateTime.Now.ToString("yyyyMMdd_HHmmss");
+        string fileName = $"{noiseImageBaseName}_{seed}_{timestamp}.png";
+        string filePath = Path.Combine(folderPath, fileName);
+        
+        // Guardar el archivo
+        File.WriteAllBytes(filePath, bytes);
+        
+        Debug.Log($"Imagen de ruido guardada en: {filePath}");
+        
+        // Actualizar el Asset Database para que Unity detecte el nuevo archivo
+        UnityEditor.AssetDatabase.Refresh();
+        
+        // Limpiar memoria
+        Destroy(texture);
+#else
+        Debug.LogWarning("SaveNoiseAsImage solo funciona en el Editor de Unity");
+#endif
     }
 
     void GenerateRoom(float[,] noise)
@@ -145,52 +204,48 @@ public class ProceduralRoomTest : MonoBehaviour
         wall.GetComponent<Renderer>().material.color = color;
     }
 
-void GenerateInternalStructures(float roomSize, float wallHeight)
-{
-    int count = Random.Range(minInternalStructures, maxInternalStructures + 1);
-
-    for (int i = 0; i < count; i++)
+    void GenerateInternalStructures(float roomSize, float wallHeight)
     {
-        GameObject structure = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        structure.transform.parent = transform;
+        int count = Random.Range(minInternalStructures, maxInternalStructures + 1);
 
-        float width  = Random.Range(minInternalSize, maxInternalSize);
-        float depth  = Random.Range(minInternalSize, maxInternalSize);
-        float height = Random.Range(minInternalHeight, maxInternalHeight);
-
-        // seguridad: que no atraviesen paredes
-        float x = Random.Range(
-            -roomSize / 2f + width / 2f + 0.5f,
-             roomSize / 2f - width / 2f - 0.5f
-        );
-
-        float z = Random.Range(
-            -roomSize / 2f + depth / 2f + 0.5f,
-             roomSize / 2f - depth / 2f - 0.5f
-        );
-
-        structure.transform.position = new Vector3(x, height / 2f, z);
-        structure.transform.localScale = new Vector3(width, height, depth);
-
-        Renderer r = structure.GetComponent<Renderer>();
-        
-        // ===== SOLUCIÓN: Usar el material del objeto primitivo ya existente =====
-        // En lugar de crear un nuevo material, usar el que viene con el primitivo
-        // y solo cambiar su color
-        
-        // ===== ASIGNAR COLOR ALEATORIO O FIJO =====
-        if (useRandomColors)
+        for (int i = 0; i < count; i++)
         {
-            // Generar color aleatorio vibrante
-            r.material.color = GetRandomColor();
-        }
-        else
-        {
-            // Usar el color definido en el Inspector
-            r.material.color = internalStructureColor;
+            GameObject structure = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            structure.transform.parent = transform;
+
+            float width  = Random.Range(minInternalSize, maxInternalSize);
+            float depth  = Random.Range(minInternalSize, maxInternalSize);
+            float height = Random.Range(minInternalHeight, maxInternalHeight);
+
+            // seguridad: que no atraviesen paredes
+            float x = Random.Range(
+                -roomSize / 2f + width / 2f + 0.5f,
+                 roomSize / 2f - width / 2f - 0.5f
+            );
+
+            float z = Random.Range(
+                -roomSize / 2f + depth / 2f + 0.5f,
+                 roomSize / 2f - depth / 2f - 0.5f
+            );
+
+            structure.transform.position = new Vector3(x, height / 2f, z);
+            structure.transform.localScale = new Vector3(width, height, depth);
+
+            Renderer r = structure.GetComponent<Renderer>();
+            
+            // ===== ASIGNAR COLOR ALEATORIO O FIJO =====
+            if (useRandomColors)
+            {
+                // Generar color aleatorio vibrante
+                r.material.color = GetRandomColor();
+            }
+            else
+            {
+                // Usar el color definido en el Inspector
+                r.material.color = internalStructureColor;
+            }
         }
     }
-}
 
     // Método para generar colores aleatorios vibrantes
     Color GetRandomColor()
