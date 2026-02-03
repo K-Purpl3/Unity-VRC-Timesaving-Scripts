@@ -118,28 +118,39 @@ public class ProceduralRoomTest : MonoBehaviour
         wall.GetComponent<Renderer>().material.color = color;
     }
 
-    void GenerateInternalStructures(float roomSize, float wallHeight)
+void GenerateInternalStructures(float roomSize, float wallHeight)
+{
+    int count = Random.Range(minInternalStructures, maxInternalStructures + 1);
+
+    for (int i = 0; i < count; i++)
     {
-        int count = Random.Range(minInternalStructures, maxInternalStructures + 1);
+        GameObject structure = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        structure.transform.parent = transform;
 
-        for (int i = 0; i < count; i++)
-        {
-            GameObject structure = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            structure.transform.parent = transform;
+        float width  = Random.Range(minInternalSize, maxInternalSize);
+        float depth  = Random.Range(minInternalSize, maxInternalSize);
+        float height = Random.Range(minInternalHeight, maxInternalHeight);
 
-            float width = Random.Range(1.5f, roomSize * 0.6f);
-            float depth = Random.Range(1.5f, roomSize * 0.6f);
-            float height = Random.Range(wallHeight * 0.4f, wallHeight);
+        // seguridad: que no atraviesen paredes
+        float x = Random.Range(
+            -roomSize / 2f + width / 2f + 0.5f,
+             roomSize / 2f - width / 2f - 0.5f
+        );
 
-            float x = Random.Range(-roomSize / 2f + width / 2f, roomSize / 2f - width / 2f);
-            float z = Random.Range(-roomSize / 2f + depth / 2f, roomSize / 2f - depth / 2f);
+        float z = Random.Range(
+            -roomSize / 2f + depth / 2f + 0.5f,
+             roomSize / 2f - depth / 2f - 0.5f
+        );
 
-            structure.transform.position = new Vector3(x, height / 2f, z);
-            structure.transform.localScale = new Vector3(width, height, depth);
+        structure.transform.position = new Vector3(x, height / 2f, z);
+        structure.transform.localScale = new Vector3(width, height, depth);
 
-            structure.GetComponent<Renderer>().material.color = internalStructureColor;
-        }
+        Renderer r = structure.GetComponent<Renderer>();
+        r.material = new Material(Shader.Find("Standard"));
+        r.material.color = internalStructureColor;
     }
+}
+
 
     void SpawnRandomObjects(float roomSize)
     {
