@@ -22,18 +22,30 @@ public class ProceduralRoomTest : MonoBehaviour
     public int minInternalStructures = 1;
     public int maxInternalStructures = 4;
     public Color internalStructureColor = new Color(0.7f, 0.4f, 0.9f);
-
+    
     [Header("Internal Structures")]
-public int minInternalStructures = 1;
-public int maxInternalStructures = 4;
-
-public float minInternalHeight = 1.5f;
-public float maxInternalHeight = 3.5f;
-
-public float minInternalSize = 1.2f;
-public float maxInternalSize = 4.0f;
-
-public Color internalStructureColor = new Color(0.7f, 0.4f, 0.9f);
+    public int minInternalStructures = 1;
+    public int maxInternalStructures = 4;
+    
+    [Space(5)]
+    [Tooltip("Altura mínima de las estructuras internas")]
+    public float minInternalHeight = 1.5f;
+    
+    [Tooltip("Altura máxima de las estructuras internas")]
+    public float maxInternalHeight = 3.5f;
+    
+    [Space(5)]
+    [Tooltip("Tamaño mínimo (ancho y profundidad)")]
+    public float minInternalSize = 1.2f;
+    
+    [Tooltip("Tamaño máximo (ancho y profundidad)")]
+    public float maxInternalSize = 4.0f;
+    
+    [Space(5)]
+    public Color internalStructureColor = new Color(0.7f, 0.4f, 0.9f);
+    
+    
+    public Color internalStructureColor = new Color(0.7f, 0.4f, 0.9f);
 
 
     void Start()
