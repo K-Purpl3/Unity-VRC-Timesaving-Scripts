@@ -42,11 +42,18 @@ public class ProceduralRoomTest : MonoBehaviour
     
     [Tooltip("Color base si no se usan colores aleatorios")]
     public Color internalStructureColor = new Color(0.7f, 0.4f, 0.9f);
-
+    
     void Start()
     {
-        Random.InitState(seed);
-
+        if (useFixedSeed)
+        {
+            Random.InitState(seed); // Usar seed fijo para resultados reproducibles
+        }
+        else
+        {
+            Random.InitState(System.DateTime.Now.Millisecond); // Aleatorio cada vez
+        }
+    
         float[,] noise = GenerateNoise();
         GenerateRoom(noise);
     }
