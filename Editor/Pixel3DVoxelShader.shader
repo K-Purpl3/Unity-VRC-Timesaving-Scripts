@@ -1,3 +1,4 @@
+//do not claim as your own, all credits go to https://github.com/K-Purpl3
 Shader "Custom/Pixel3DVoxelShader"
 {
     Properties
