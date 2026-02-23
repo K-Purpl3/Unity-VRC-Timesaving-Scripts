@@ -307,13 +307,91 @@ Shader "Custom/URP/SNESSprite"
             Cull Back
 
             HLSLPROGRAM
-            #pragma vertex ShadowVert
-            #pragma fragment ShadowFrag
+            #pragma vertex ShadowPassVertex
+            #pragma fragment ShadowPassFragment
             #pragma multi_compile_instancing
+            #pragma multi_compile _ _CASTING_PUNCTUAL_LIGHT_SHADOW
 
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
-            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/SurfaceInput.hlsl"
-            #include "Packages/com.unity.render-pipelines.universal/Shaders/ShadowCasterPass.hlsl"
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/UnityInput.hlsl"
+
+            // We need _BaseMap declared for the shadow pass includes
+            TEXTURE2D(_BaseMap);
+            SAMPLER(sampler_BaseMap);
+
+            CBUFFER_START(UnityPerMaterial)
+                float4 _BaseMap_ST;
+                float4 _BaseColor;
+                float4 _ShadowColor;
+                float4 _MidtoneColor;
+                float4 _SpecularColor;
+                float4 _OutlineColor;
+                float  _ShadowThreshold;
+                float  _MidtoneThreshold;
+                float  _SpecularThreshold;
+                float  _OutlineThickness;
+                float  _UseOutline;
+                float  _UseSpecular;
+                float  _UsePixelation;
+                float  _PixelSize;
+                float  _UsePaletteLimit;
+                float  _PaletteSteps;
+            CBUFFER_END
+
+            // Required by ShadowCasterPass.hlsl
+            float3 _LightDirection;
+            float3 _LightPosition;
+
+            struct ShadowAttributes
+            {
+                float4 positionOS : POSITION;
+                float3 normalOS   : NORMAL;
+                float2 uv         : TEXCOORD0;
+                UNITY_VERTEX_INPUT_INSTANCE_ID
+            };
+
+            struct ShadowVaryings
+            {
+                float4 positionCS : SV_POSITION;
+                UNITY_VERTEX_OUTPUT_STEREO
+            };
+
+            float4 GetShadowPositionHClip(ShadowAttributes input)
+            {
+                float3 positionWS = TransformObjectToWorld(input.positionOS.xyz);
+                float3 normalWS   = TransformObjectToWorldNormal(input.normalOS);
+
+                #if _CASTING_PUNCTUAL_LIGHT_SHADOW
+                    float3 lightDir = normalize(_LightPosition - positionWS);
+                #else
+                    float3 lightDir = _LightDirection;
+                #endif
+
+                float4 positionCS = TransformWorldToHClip(ApplyShadowBias(positionWS, normalWS, lightDir));
+
+                #if UNITY_REVERSED_Z
+                    positionCS.z = min(positionCS.z, UNITY_NEAR_CLIP_VALUE);
+                #else
+                    positionCS.z = max(positionCS.z, UNITY_NEAR_CLIP_VALUE);
+                #endif
+
+                return positionCS;
+            }
+
+            ShadowVaryings ShadowPassVertex(ShadowAttributes input)
+            {
+                ShadowVaryings output;
+                UNITY_SETUP_INSTANCE_ID(input);
+                UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
+                output.positionCS = GetShadowPositionHClip(input);
+                return output;
+            }
+
+            half4 ShadowPassFragment(ShadowVaryings input) : SV_TARGET
+            {
+                return 0;
+            }
             ENDHLSL
         }
 
@@ -335,7 +413,51 @@ Shader "Custom/URP/SNESSprite"
             #pragma multi_compile_instancing
 
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
-            #include "Packages/com.unity.render-pipelines.universal/Shaders/DepthOnlyPass.hlsl"
+
+            CBUFFER_START(UnityPerMaterial)
+                float4 _BaseMap_ST;
+                float4 _BaseColor;
+                float4 _ShadowColor;
+                float4 _MidtoneColor;
+                float4 _SpecularColor;
+                float4 _OutlineColor;
+                float  _ShadowThreshold;
+                float  _MidtoneThreshold;
+                float  _SpecularThreshold;
+                float  _OutlineThickness;
+                float  _UseOutline;
+                float  _UseSpecular;
+                float  _UsePixelation;
+                float  _PixelSize;
+                float  _UsePaletteLimit;
+                float  _PaletteSteps;
+            CBUFFER_END
+
+            struct DepthAttributes
+            {
+                float4 positionOS : POSITION;
+                UNITY_VERTEX_INPUT_INSTANCE_ID
+            };
+
+            struct DepthVaryings
+            {
+                float4 positionCS : SV_POSITION;
+                UNITY_VERTEX_OUTPUT_STEREO
+            };
+
+            DepthVaryings DepthOnlyVertex(DepthAttributes input)
+            {
+                DepthVaryings output;
+                UNITY_SETUP_INSTANCE_ID(input);
+                UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
+                output.positionCS = TransformObjectToHClip(input.positionOS.xyz);
+                return output;
+            }
+
+            half4 DepthOnlyFragment(DepthVaryings input) : SV_TARGET
+            {
+                return 0;
+            }
             ENDHLSL
         }
     }
